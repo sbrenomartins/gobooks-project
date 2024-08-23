@@ -31,3 +31,17 @@ Content-Type: application/json
 ###
 
 DELETE http://localhost:8080/books/1
+
+###
+
+GET http://localhost:8080/books-by-name/clean
+Accept: application/json
+
+###
+
+POST http://localhost:8080/simulate
+Accept: application/json
+
+{
+    "book_ids": [1, 2, 3]
+}

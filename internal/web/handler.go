@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/sbrenomartins/gobooks/internal/service"
 )
@@ -115,4 +116,38 @@ func (handler *BookHandlers) DeleteBook(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (handler *BookHandlers) SearchBooks(w http.ResponseWriter, r *http.Request) {
+	name := r.PathValue("name")
+	books, err := handler.bookService.SearchBooksByName(name)
+
+	if err != nil {
+		http.Error(w, "No books found", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(books)
+}
+
+func (handler *BookHandlers) SimulateRead(w http.ResponseWriter, r *http.Request) {
+	var request struct {
+		BookIDs []int `json:"book_ids"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	if len(request.BookIDs) == 0 {
+		http.Error(w, "No book IDs provided", http.StatusBadRequest)
+		return
+	}
+
+	responses := handler.bookService.SimulateMultipleReadings(request.BookIDs, 2*time.Second)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(responses)
 }
