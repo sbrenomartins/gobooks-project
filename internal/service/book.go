@@ -93,11 +93,37 @@ func (service *BookService) DeleteBook(id int) error {
 	return err
 }
 
+func (service *BookService) SearchBooksByName(name string) ([]Book, error) {
+	query := "SELECT id, title, author, genre FROM books WHERE title LIKE ?"
+	rows, err := service.db.Query(query, "%"+name+"%")
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var books []Book
+	for rows.Next() {
+		var book Book
+		err := rows.Scan(&book.ID, &book.Title, &book.Author, &book.Genre)
+
+		if err != nil {
+			return nil, err
+		}
+
+		books = append(books, book)
+	}
+
+	return books, nil
+}
+
 func (service *BookService) SimulateReading(bookID int, duration time.Duration, results chan<- string) {
 	book, err := service.GetBookByID(bookID)
 
 	if err != nil || book == nil {
 		results <- fmt.Sprintf("Book %d not found", bookID)
+		return
 	}
 
 	time.Sleep(duration)
